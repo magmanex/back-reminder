@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>Posture Break — ตั้งค่า</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <main class="wrap">
+    <h1>ตั้งค่า Posture Break</h1>
+    <p class="sub">ปรับจังหวะการเตือนให้เข้ากับร่างกายและงานของคุณ — ค่าตั้งต้นคือกฎ 20-8-2</p>
+
+    <section class="group">
+      <h2>ระยะเวลาแต่ละเฟส (นาที)</h2>
+      <div class="row">
+        <label>🪑 นั่งทำงาน</label>
+        <input type="number" id="durSIT" min="1" max="120" />
+      </div>
+      <div class="row">
+        <label>🧍 ยืนทำงาน</label>
+        <input type="number" id="durSTAND" min="1" max="120" />
+      </div>
+      <div class="row">
+        <label>🚶 เดิน / ยืดเหยียด</label>
+        <input type="number" id="durWALK" min="1" max="120" />
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>การแจ้งเตือน</h2>
+      <div class="row">
+        <label>เปิดเสียงเตือน</label>
+        <input type="checkbox" id="soundEnabled" />
+      </div>
+      <div class="row">
+        <label>เลื่อนเตือน (snooze) ครั้งละ (นาที)</label>
+        <input type="number" id="snoozeMinutes" min="1" max="60" />
+      </div>
+    </section>
+
+    <section class="group">
+      <h2>ช่วงเวลาทำงาน</h2>
+      <p class="note">นอกช่วงนี้จะจับเวลาเงียบ ๆ โดยไม่เด้งแจ้งเตือน</p>
+      <div class="row">
+        <label>จำกัดเฉพาะเวลาทำงาน</label>
+        <input type="checkbox" id="workHoursEnabled" />
+      </div>
+      <div class="row">
+        <label>เริ่ม (ชั่วโมง 0–23)</label>
+        <input type="number" id="startHour" min="0" max="23" />
+      </div>
+      <div class="row">
+        <label>สิ้นสุด (ชั่วโมง 0–23)</label>
+        <input type="number" id="endHour" min="0" max="23" />
+      </div>
+    </section>
+
+    <div class="actions">
+      <button class="btn ghost" id="restart">รีสตาร์ทรอบใหม่</button>
+      <button class="btn primary" id="save">บันทึก</button>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <footer class="tip">
+      💡 คุณกำลังทำกายภาพบำบัดอยู่ ถ้านักกายภาพแนะนำจังหวะหรือท่าเฉพาะตัว ให้ยึดตามนั้นก่อน แล้วตั้งค่าตรงนี้ให้ตรงกัน
+    </footer>
+  </main>
+  <script src="options.js"></script>
+</body>
+</html>

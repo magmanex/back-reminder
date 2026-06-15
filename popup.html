@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="card" id="card">
+    <header class="head">
+      <span class="dot" id="dot"></span>
+      <span class="brand">Posture Break</span>
+      <button class="icon-btn" id="settings" title="ตั้งค่า">⚙</button>
+    </header>
+
+    <div class="stage">
+      <svg class="ring" viewBox="0 0 120 120">
+        <circle class="ring-bg" cx="60" cy="60" r="52" />
+        <circle class="ring-fg" id="ringFg" cx="60" cy="60" r="52" />
+      </svg>
+      <div class="stage-center">
+        <div class="emoji" id="emoji">🪑</div>
+        <div class="time" id="time">--:--</div>
+      </div>
+    </div>
+
+    <div class="phase-label" id="phaseLabel">กำลังโหลด…</div>
+    <div class="phase-hint" id="phaseHint"></div>
+
+    <div class="controls">
+      <button class="btn ghost" id="skip">ข้ามเฟส</button>
+      <button class="btn primary" id="toggle">หยุดพัก</button>
+    </div>
+
+    <div class="cycle" id="cycle"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

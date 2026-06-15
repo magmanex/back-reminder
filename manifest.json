@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Posture Break — เตือนนั่ง ยืน เดิน",
+  "version": "1.0.0",
+  "description": "เตือนให้สลับท่าทาง นั่ง–ยืน–เดิน ตามจังหวะ ergonomics เพื่อสุขภาพหลัง",
+  "permissions": ["alarms", "notifications", "storage"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Posture Break",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "options_page": "options.html",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
