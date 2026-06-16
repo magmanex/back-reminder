@@ -3,7 +3,7 @@
   "name": "Posture Break — เตือนนั่ง ยืน เดิน",
   "version": "1.0.0",
   "description": "เตือนให้สลับท่าทาง นั่ง–ยืน–เดิน ตามจังหวะ ergonomics เพื่อสุขภาพหลัง",
-  "permissions": ["alarms", "notifications", "storage"],
+  "permissions": ["alarms", "notifications", "storage", "offscreen"],
   "background": {
     "service_worker": "background.js"
   },

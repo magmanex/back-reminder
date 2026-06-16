@@ -117,6 +117,7 @@ async function onPhaseEnd() {
   await updateBadge();
 
   const settings = await getSettings();
+  await playBeep(settings);
   await showChangeNotification(nextKey, settings);
   await showChangePopup(settings);
 }
@@ -132,6 +133,23 @@ async function advance() {
   await closeAlertWindow();
   await setState({ cycle });
   await enterPhase(nextKey);
+}
+
+// ============================================================================
+// เสียงเตือน — MV3 service worker ไม่มี DOM/Audio เล่นเสียงผ่าน offscreen document
+// (กฎเหล็กข้อ 3) สร้าง doc ครั้งเดียวแล้วใช้ซ้ำ ส่ง message ไปสั่งเล่น beep
+// ============================================================================
+async function playBeep(settings) {
+  if (!settings.soundEnabled) return;
+  if (!withinWorkHours(settings)) return;
+  if (!(await chrome.offscreen.hasDocument())) {
+    await chrome.offscreen.createDocument({
+      url: "offscreen.html",
+      reasons: ["AUDIO_PLAYBACK"],
+      justification: "เล่นเสียงเตือนตอนถึงเวลาเปลี่ยนท่าทาง",
+    });
+  }
+  await chrome.runtime.sendMessage({ type: "PLAY_BEEP" });
 }
 
 // ============================================================================
@@ -240,6 +258,7 @@ async function resume() {
     await setState({ paused: false });
     await updateBadge();
     const settings = await getSettings();
+    await playBeep(settings);
     await showChangeNotification(state.nextPhase, settings);
     await showChangePopup(settings);
   } else {
