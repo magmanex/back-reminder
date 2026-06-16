@@ -33,7 +33,8 @@ back-reminder/
 ├── manifest.json      # MV3 config (permissions: alarms, notifications, storage)
 ├── background.js      # service worker — หัวใจ state machine + alarms
 ├── popup.html/css/js  # หน้าต่างเล็กบน toolbar: เฟสปัจจุบัน + นับถอยหลัง + ปุ่มควบคุม
-├── options.html/css/js# หน้าตั้งค่า: ระยะเวลาเฟส / เสียง / snooze / ช่วงเวลาทำงาน
+├── alert.html/css/js  # หน้าต่าง popup ที่เด้งจริงตอนเปลี่ยนเฟส (กันพลาด notification)
+├── options.html/css/js# หน้าตั้งค่า: ระยะเวลาเฟส / เสียง / popup / snooze / ช่วงเวลาทำงาน
 └── icons/             # 16, 48, 128
 ```
 
@@ -49,11 +50,17 @@ back-reminder/
 | ถูกปลุกตอนเปิด Chrome | `onStartup` กู้ badge + ถ้าเลยเวลาเฟสให้ advance | กันกรณีปิด Chrome ไว้นาน |
 
 **Alarms ที่ใช้:**
-- `phase-timer` — one-shot ตั้งตอนเข้าเฟสใหม่ ยิงเมื่อหมดเวลาเฟส → เลื่อนเฟส
+- `phase-timer` — one-shot ตั้งตอนเข้าเฟสใหม่ ยิงเมื่อหมดเวลาเฟส → เด้งเตือน (ไม่เปลี่ยนท่าเอง รอ user กด)
 - `tick` — ทุก 1 นาที อัปเดต badge นับถอยหลังบนไอคอน
 - `resume` — ตั้งตอน snooze เพื่อปลุกกลับ
 
 **Badge** บนไอคอน toolbar = นาทีที่เหลือ + สีตามเฟส (ฟ้า/เหลือง/เขียว), `⏸` ตอนพัก
+
+**Popup window** — พอหมดเวลาเฟส (ไม่เปลี่ยนท่าเอง) ถ้า `popupEnabled` เปิด (ค่าตั้งต้น) จะเด้ง
+หน้าต่างจริงผ่าน `chrome.windows.create({ type: "popup" })` โฟกัสขึ้นมาเลย บอกท่าถัดไป
+พร้อมปุ่ม **"เริ่ม<ท่าถัดไป>"** (`advance` → เข้าเฟสถัดไป) และ **"เลื่อน"** (snooze เตือนซ้ำ)
+เด้งเฉพาะในช่วงเวลาทำงาน เก็บ window id ใน `chrome.storage.local` (`alertWindowId`) กันเด้งซ้อน
+ไม่ต้องขอ permission เพิ่ม คู่กับ OS notification (ปุ่มเดียวกัน) เผื่อ user ไม่เห็นอันใดอันหนึ่ง
 
 ---
 

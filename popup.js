@@ -18,15 +18,25 @@ async function load() {
 
 function render() {
   const { state, phases } = cache;
-  const phase = phases[state.phase] || phases.SIT;
+  // ระหว่างรอเปลี่ยนท่า โชว์ท่าถัดไป
+  const shownKey = state.awaiting ? (state.nextPhase || state.phase) : state.phase;
+  const phase = phases[shownKey] || phases.SIT;
 
   document.documentElement.style.setProperty("--accent", phase.color);
   document.body.classList.toggle("paused", state.paused);
 
   $("emoji").textContent = phase.emoji;
-  $("phaseLabel").textContent = state.paused ? "พักการเตือนอยู่" : phase.label;
-  $("phaseHint").textContent = state.paused ? "" : hintFor(phase.key);
-  $("toggle").textContent = state.paused ? "ทำต่อ" : "หยุดพัก";
+  if (state.awaiting) {
+    $("phaseLabel").textContent = `ถึงเวลา${phase.label}`;
+    $("phaseHint").textContent = hintFor(phase.key);
+    $("skip").textContent = `เริ่ม${phase.label}`; // ปุ่มซ้าย = เริ่มท่าถัดไป
+  } else {
+    $("phaseLabel").textContent = state.paused ? "พักการเตือนอยู่" : phase.label;
+    $("phaseHint").textContent = state.paused ? "" : hintFor(phase.key);
+    $("skip").textContent = "ข้ามเฟส";
+  }
+  $("toggle").textContent = state.paused ? "▶" : "⏸";
+  $("toggle").title = state.paused ? "ทำต่อ" : "หยุดพัก";
   $("cycle").textContent = state.running ? `รอบที่ ${state.cycle + 1} วันนี้` : "ยังไม่เริ่มจับเวลา";
 
   paintTime();
@@ -53,7 +63,7 @@ function paintTime() {
 
   const total = (settings.durations[state.phase] || 1) * 60000;
   let remain = state.phaseEndsAt - Date.now();
-  if (state.paused) remain = total; // หยุดพัก: โชว์เต็มวง
+  if (state.paused) remain = state.remainMs != null ? state.remainMs : total; // หยุดพัก: freeze เวลาที่เหลือ
   remain = Math.max(0, remain);
 
   const sec = Math.ceil(remain / 1000);

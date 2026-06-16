@@ -5,6 +5,7 @@ const FIELDS = {
   durSTAND: ["durations", "STAND"],
   durWALK:  ["durations", "WALK"],
   soundEnabled:     ["soundEnabled"],
+  popupEnabled:     ["popupEnabled"],
   snoozeMinutes:    ["snoozeMinutes"],
   workHoursEnabled: ["workHoursEnabled"],
   startHour:        ["startHour"],
@@ -17,6 +18,7 @@ async function load() {
   $("durSTAND").value = settings.durations.STAND;
   $("durWALK").value  = settings.durations.WALK;
   $("soundEnabled").checked     = settings.soundEnabled;
+  $("popupEnabled").checked     = settings.popupEnabled;
   $("snoozeMinutes").value      = settings.snoozeMinutes;
   $("workHoursEnabled").checked = settings.workHoursEnabled;
   $("startHour").value = settings.startHour;
@@ -31,6 +33,7 @@ function collect() {
       WALK:  clampInt($("durWALK").value, 1, 120),
     },
     soundEnabled:     $("soundEnabled").checked,
+    popupEnabled:     $("popupEnabled").checked,
     snoozeMinutes:    clampInt($("snoozeMinutes").value, 1, 60),
     workHoursEnabled: $("workHoursEnabled").checked,
     startHour:        clampInt($("startHour").value, 0, 23),

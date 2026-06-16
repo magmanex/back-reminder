@@ -1,0 +1,78 @@
+:root {
+  --bg: #0f1115;
+  --text: #e8eaed;
+  --muted: #8a909b;
+  --line: #242833;
+  --accent: #3B82F6; /* override per phase via JS */
+  font-family: "Inter", system-ui, -apple-system, "Noto Sans Thai", sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.alert {
+  width: 100%;
+  padding: 24px 28px 28px;
+  text-align: center;
+  /* แถบสีตามเฟสด้านบนเพื่อสะดุดตา */
+  border-top: 5px solid var(--accent);
+}
+
+.emoji {
+  font-size: 64px;
+  line-height: 1;
+  animation: bob 1.6s ease-in-out infinite;
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+.label {
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 14px;
+}
+.hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+  min-height: 18px;
+}
+.time {
+  font-size: 15px;
+  color: var(--accent);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-top: 10px;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+.btn {
+  flex: 1;
+  padding: 12px 0;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: filter .15s ease, background .15s ease;
+}
+.btn.primary { background: var(--accent); color: #fff; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { background: var(--line); color: var(--text); }
+.btn.ghost:hover { background: #2c313d; }
