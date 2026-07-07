@@ -29,6 +29,8 @@ const DEFAULT_SETTINGS = {
 const PHASE_ALARM = "phase-timer"; // alarm หลัก: จับเวลาแต่ละเฟส
 const TICK_ALARM  = "tick";        // alarm รอง: อัปเดต badge นับถอยหลังทุก 1 นาที
 const RESUME_ALARM = "resume";     // alarm สำหรับปลุกกลับหลัง snooze
+const NAG_ALARM   = "nag";         // alarm เตือนซ้ำระหว่าง awaiting — กันพลาดเตือนครั้งแรกแล้วค้างทั้งวัน
+const NAG_MINUTES = 3;             // เตือนซ้ำทุกกี่นาทีจนกว่า user จะกด
 
 // ============================================================================
 // State helpers
@@ -120,6 +122,22 @@ async function onPhaseEnd() {
   await playBeep(settings);
   await showChangeNotification(nextKey, settings);
   await showChangePopup(settings);
+
+  // เตือนซ้ำเรื่อย ๆ จนกว่าจะกด — พลาดเตือนครั้งแรก ≠ ระบบค้างทั้งวัน
+  await chrome.alarms.create(NAG_ALARM, { periodInMinutes: NAG_MINUTES });
+}
+
+// ยิงจาก NAG_ALARM: ยังค้าง awaiting อยู่ → เด้งเตือนรอบใหม่ทั้งชุด
+async function renag() {
+  const state = await getState();
+  if (!state.running || state.paused || !state.awaiting) {
+    await chrome.alarms.clear(NAG_ALARM);
+    return;
+  }
+  const settings = await getSettings();
+  await playBeep(settings);
+  await showChangeNotification(state.nextPhase, settings);
+  await showChangePopup(settings);
 }
 
 // user กดยืนยัน (จาก popup / notification / ปุ่ม skip) → เข้าท่าถัดไปจริง
@@ -130,6 +148,7 @@ async function advance() {
   const cycle = nextKey === "SIT" ? state.cycle + 1 : state.cycle;
 
   await chrome.notifications.clear("posture");
+  await chrome.alarms.clear(NAG_ALARM);
   await closeAlertWindow();
   await setState({ cycle });
   await enterPhase(nextKey);
@@ -232,6 +251,7 @@ chrome.windows.onRemoved.addListener(async (winId) => {
 async function snooze() {
   const settings = await getSettings();
   await chrome.notifications.clear("posture");
+  await chrome.alarms.clear(NAG_ALARM);
   await closeAlertWindow();
   await setState({ paused: true });
   await chrome.alarms.create(RESUME_ALARM, {
@@ -244,6 +264,7 @@ async function pause() {
   const state = await getState();
   await chrome.alarms.clear(PHASE_ALARM);
   await chrome.alarms.clear(RESUME_ALARM);
+  await chrome.alarms.clear(NAG_ALARM);
   // เก็บเวลาที่เหลือไว้ เพื่อ resume แล้วนับต่อ (ไม่ reset เฟส)
   const remainMs = Math.max(0, state.phaseEndsAt - Date.now());
   await setState({ paused: true, remainMs });
@@ -254,13 +275,14 @@ async function resume() {
   await chrome.alarms.clear(RESUME_ALARM);
   const state = await getState();
   if (state.awaiting) {
-    // ระหว่างรอเปลี่ยนท่าแล้ว snooze → ปลุกมาเตือนเปลี่ยนท่าซ้ำ
+    // ระหว่างรอเปลี่ยนท่าแล้ว snooze → ปลุกมาเตือนเปลี่ยนท่าซ้ำ (พร้อม nag ต่อ)
     await setState({ paused: false });
     await updateBadge();
     const settings = await getSettings();
     await playBeep(settings);
     await showChangeNotification(state.nextPhase, settings);
     await showChangePopup(settings);
+    await chrome.alarms.create(NAG_ALARM, { periodInMinutes: NAG_MINUTES });
   } else {
     // นับต่อจากเวลาที่เหลือตอน pause (ไม่ reset เฟส)
     const settings = await getSettings();
@@ -289,6 +311,7 @@ async function stop() {
   await chrome.alarms.clear(PHASE_ALARM);
   await chrome.alarms.clear(TICK_ALARM);
   await chrome.alarms.clear(RESUME_ALARM);
+  await chrome.alarms.clear(NAG_ALARM);
   await setState({ running: false, paused: false });
   await chrome.action.setBadgeText({ text: "" });
 }
@@ -303,6 +326,8 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     await resume();
   } else if (alarm.name === TICK_ALARM) {
     await updateBadge();
+  } else if (alarm.name === NAG_ALARM) {
+    await renag();
   }
 });
 
@@ -324,6 +349,10 @@ chrome.runtime.onStartup.addListener(async () => {
     // กันกรณี phase alarm หาย: ถ้าหมดเวลาไปแล้วและยังไม่ค้างเตือน → เด้งเตือนเปลี่ยนท่า
     if (!state.paused && !state.awaiting && state.phaseEndsAt <= Date.now()) {
       await onPhaseEnd();
+    } else if (!state.paused && state.awaiting) {
+      // ปิด Chrome ทั้งที่ค้าง awaiting — เปิดใหม่ต้องเตือนต่อ ไม่ใช่เงียบถาวร
+      await renag();
+      await chrome.alarms.create(NAG_ALARM, { periodInMinutes: NAG_MINUTES });
     }
     await updateBadge();
   }

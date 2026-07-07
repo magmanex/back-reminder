@@ -32,10 +32,14 @@ popup window รอ user กด "เริ่มท่าถัดไป" (`adva
 **Flow:** `enterPhase()` ตั้งเวลา → alarm ยิง → `onPhaseEnd()` (set awaiting + เด้งเตือน) →
 user กด → `ADVANCE`/`SNOOZE` → `advance()` เข้าเฟสถัดไป
 
-**Alarms 3 ตัว:**
+**Alarms 4 ตัว:**
 - `phase-timer` — one-shot ตั้งตอนเข้าเฟสใหม่ ยิงเมื่อหมดเวลา → `onPhaseEnd()` (เด้งเตือน ไม่เปลี่ยนท่าเอง)
 - `tick` — ทุก 1 นาที อัปเดต badge นับถอยหลังบนไอคอน
 - `resume` — ตั้งตอน snooze เพื่อปลุกมาเตือนเปลี่ยนท่าซ้ำ
+- `nag` — repeating ทุก `NAG_MINUTES` (3 นาที) ระหว่าง `awaiting`: เด้งเตือนซ้ำทั้งชุด
+  (`renag()`) จนกว่า user จะกด — แก้ bug ค้าง awaiting ทั้งวันถ้าพลาดเตือนครั้งแรก
+  ต้อง clear ทุกทางออกจาก awaiting (`advance`/`snooze`/`pause`/`stop`) และสร้างใหม่ใน
+  `resume` (สาย awaiting) + `onStartup` (ปิด Chrome ทั้งที่ค้าง awaiting)
 
 **Storage keys:**
 - `state` = `{ running, paused, awaiting, phase, nextPhase, phaseEndsAt, cycle }`
