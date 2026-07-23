@@ -119,9 +119,7 @@ async function onPhaseEnd() {
   await updateBadge();
 
   const settings = await getSettings();
-  await playBeep(settings);
-  await showChangeNotification(nextKey, settings);
-  await showChangePopup(settings);
+  await deliverPhaseAlert(nextKey, settings);
 
   // เตือนซ้ำเรื่อย ๆ จนกว่าจะกด — พลาดเตือนครั้งแรก ≠ ระบบค้างทั้งวัน
   await chrome.alarms.create(NAG_ALARM, { periodInMinutes: NAG_MINUTES });
@@ -135,9 +133,26 @@ async function renag() {
     return;
   }
   const settings = await getSettings();
-  await playBeep(settings);
-  await showChangeNotification(state.nextPhase, settings);
-  await showChangePopup(settings);
+  await deliverPhaseAlert(state.nextPhase, settings);
+}
+
+// Each channel must fail independently: broken audio must not hide visual alerts.
+async function deliverPhaseAlert(nextKey, settings, { force = false } = {}) {
+  const alertSettings = force
+    ? { ...settings, workHoursEnabled: false }
+    : settings;
+  const channels = [
+    ["notification", () => showChangeNotification(nextKey, alertSettings)],
+    ["popup", () => showChangePopup(alertSettings)],
+    ["sound", () => playBeep(alertSettings)],
+  ];
+
+  const results = await Promise.allSettled(channels.map(([, run]) => run()));
+  results.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.warn(`[Posture Break] ${channels[index][0]} alert failed:`, result.reason);
+    }
+  });
 }
 
 // user กดยืนยัน (จาก popup / notification / ปุ่ม skip) → เข้าท่าถัดไปจริง
@@ -279,9 +294,7 @@ async function resume() {
     await setState({ paused: false });
     await updateBadge();
     const settings = await getSettings();
-    await playBeep(settings);
-    await showChangeNotification(state.nextPhase, settings);
-    await showChangePopup(settings);
+    await deliverPhaseAlert(state.nextPhase, settings);
     await chrome.alarms.create(NAG_ALARM, { periodInMinutes: NAG_MINUTES });
   } else {
     // นับต่อจากเวลาที่เหลือตอน pause (ไม่ reset เฟส)
@@ -376,6 +389,15 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       case "SKIP":    await skipToNext(); sendResponse({ ok: true }); break;
       case "RESTART": await start();      sendResponse({ ok: true }); break;
       case "STOP":    await stop();       sendResponse({ ok: true }); break;
+      case "TEST_ALERT": {
+        const state = await getState();
+        const settings = await getSettings();
+        const idx = PHASE_ORDER.indexOf(state.phase);
+        const nextKey = state.nextPhase || PHASE_ORDER[(idx + 1) % PHASE_ORDER.length];
+        await deliverPhaseAlert(nextKey, settings, { force: true });
+        sendResponse({ ok: true });
+        break;
+      }
       case "SAVE_SETTINGS": {
         await chrome.storage.local.set({ settings: { ...DEFAULT_SETTINGS, ...msg.settings } });
         // เริ่มเฟสปัจจุบันใหม่เพื่อใช้ระยะเวลาที่อัปเดต

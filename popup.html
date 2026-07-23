@@ -7,11 +7,18 @@
 <body>
   <div class="card" id="card">
     <header class="head">
-      <span class="dot" id="dot"></span>
-      <span class="brand">Posture Break</span>
+      <div class="brand-lockup">
+        <span class="dot" id="dot"></span>
+        <div>
+          <span class="brand">Posture Break</span>
+          <span class="status" id="status">กำลังโหลด…</span>
+        </div>
+      </div>
       <button class="icon-btn" id="toggle" title="หยุดพัก">⏸</button>
       <button class="icon-btn" id="settings" title="ตั้งค่า">⚙</button>
     </header>
+
+    <div class="phases" id="phases"></div>
 
     <div class="stage">
       <svg class="ring" viewBox="0 0 120 120">
@@ -31,7 +38,10 @@
       <button class="btn primary" id="skip">ข้ามเฟส</button>
     </div>
 
-    <div class="cycle" id="cycle"></div>
+    <div class="footer-row">
+      <div class="cycle" id="cycle"></div>
+      <button class="test-alert" id="testAlert">ทดสอบแจ้งเตือน</button>
+    </div>
   </div>
 
   <script src="popup.js"></script>

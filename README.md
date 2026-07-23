@@ -62,6 +62,9 @@ back-reminder/
 เด้งเฉพาะในช่วงเวลาทำงาน เก็บ window id ใน `chrome.storage.local` (`alertWindowId`) กันเด้งซ้อน
 ไม่ต้องขอ permission เพิ่ม คู่กับ OS notification (ปุ่มเดียวกัน) เผื่อ user ไม่เห็นอันใดอันหนึ่ง
 
+กด **ทดสอบแจ้งเตือน** ใน toolbar popup เพื่อยิงเสียง + OS notification + หน้าต่างเตือนทันที
+โดยไม่สนช่วงเวลาทำงาน ใช้แยกปัญหาสิทธิ์ notification ของระบบได้
+
 ---
 
 ## 4. ติดตั้ง / ลองใช้
@@ -89,6 +92,7 @@ back-reminder/
 
 ### หมายเหตุสำหรับ Claude Code
 - โค้ดทั้งหมดเป็น vanilla JS ไม่มี build step — แก้แล้วกด reload ที่ `chrome://extensions` ได้เลย
+- รัน regression tests ด้วย `node --test test/background.test.js`
 - ทุก feature ที่แตะ state ให้ผ่าน `getState()/setState()` ใน `background.js` และสื่อสารกับ UI ผ่าน message types (`GET_STATE`, `PAUSE`, `RESUME`, `SKIP`, `RESTART`, `SAVE_SETTINGS`)
 - อย่าใช้ `setInterval` ใน background.js — ใช้ `chrome.alarms` เสมอ
 

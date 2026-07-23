@@ -17,13 +17,14 @@ async function load() {
 }
 
 function render() {
-  const { state, phases } = cache;
+  const { state, settings, phases, order } = cache;
   // ระหว่างรอเปลี่ยนท่า โชว์ท่าถัดไป
   const shownKey = state.awaiting ? (state.nextPhase || state.phase) : state.phase;
   const phase = phases[shownKey] || phases.SIT;
 
   document.documentElement.style.setProperty("--accent", phase.color);
   document.body.classList.toggle("paused", state.paused);
+  document.body.classList.toggle("awaiting", state.awaiting);
 
   $("emoji").textContent = phase.emoji;
   if (state.awaiting) {
@@ -37,9 +38,42 @@ function render() {
   }
   $("toggle").textContent = state.paused ? "▶" : "⏸";
   $("toggle").title = state.paused ? "ทำต่อ" : "หยุดพัก";
-  $("cycle").textContent = state.running ? `รอบที่ ${state.cycle + 1} วันนี้` : "ยังไม่เริ่มจับเวลา";
+  $("cycle").textContent = state.running ? `รอบที่ ${state.cycle + 1}` : "ยังไม่เริ่ม";
+  $("status").textContent = statusText(state, settings);
+  $("phases").innerHTML = order.map((key) => {
+    const item = phases[key];
+    const active = key === shownKey ? " active" : "";
+    return `<div class="phase-chip${active}">
+      <span>${item.emoji}</span>
+      <strong>${shortLabel(key)}</strong>
+      <small>${settings.durations[key]} นาที</small>
+    </div>`;
+  }).join("");
 
   paintTime();
+}
+
+function shortLabel(key) {
+  return { SIT: "นั่ง", STAND: "ยืน", WALK: "เดิน" }[key] || key;
+}
+
+function statusText(state, settings) {
+  if (state.paused) return "หยุดพักการเตือน";
+  if (state.awaiting) return "รอคุณเปลี่ยนท่า";
+  if (settings.workHoursEnabled) {
+    const hour = new Date().getHours();
+    const inHours = settings.startHour <= settings.endHour
+      ? hour >= settings.startHour && hour < settings.endHour
+      : hour >= settings.startHour || hour < settings.endHour;
+    if (!inHours) {
+      return `โหมดเงียบ · ${padHour(settings.startHour)}–${padHour(settings.endHour)}`;
+    }
+  }
+  return "กำลังจับเวลา";
+}
+
+function padHour(hour) {
+  return `${String(hour).padStart(2, "0")}:00`;
 }
 
 function hintFor(key) {
@@ -85,5 +119,15 @@ $("skip").addEventListener("click", async () => {
   await load();
 });
 $("settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
+$("testAlert").addEventListener("click", async () => {
+  const button = $("testAlert");
+  button.disabled = true;
+  button.textContent = "ส่งแล้ว ✓";
+  await send("TEST_ALERT");
+  setTimeout(() => {
+    button.disabled = false;
+    button.textContent = "ทดสอบแจ้งเตือน";
+  }, 1400);
+});
 
 load();
